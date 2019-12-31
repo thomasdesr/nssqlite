@@ -1,0 +1,18 @@
+[package]
+name = "nssqlite"
+version = "0.1.0"
+authors = ["Thomas Desrosiers <git@hive.pw>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "nss_sqlite"
+crate-type = [ "cdylib" ]
+
+[dependencies]
+libc = "0.2.66"
+lazy_static = "1.4.0"
+paste = "0.1.6"
+libnss = { git = "https://github.com/csnewman/libnss-rs", rev = "be24e70b207c4355712de6706e4025fb113fa09c" }
+rusqlite = { version = "0.21.0", features = ["bundled"] }
