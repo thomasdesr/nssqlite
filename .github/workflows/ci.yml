@@ -23,10 +23,12 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
+          args: --features dynamic_paths
 
       - uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --features dynamic_paths
 
       - uses: actions-rs/cargo@v1
         with:
