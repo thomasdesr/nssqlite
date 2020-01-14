@@ -6,28 +6,36 @@ use rusqlite::{params, Connection, Result, Row, NO_PARAMS};
 
 use crate::db::from_result;
 
-pub const PATH: &str = "/etc/passwd.db";
+// TODO: Find a better way to do this >.<
+pub const DEFAULT_PATH: &str = "/etc/passwd.db";
+lazy_static! {
+    pub static ref PATH: String = if cfg!(feature = "dynamic_paths") {
+        std::env::var("NSS_PASSWD_PATH").unwrap_or_else(|_| String::from(DEFAULT_PATH))
+    } else {
+        String::from(DEFAULT_PATH)
+    };
+}
 
 pub struct SqlitePasswd;
 libnss_passwd_hooks!(sqlite, SqlitePasswd);
 
 impl PasswdHooks for SqlitePasswd {
     fn get_all_entries() -> Response<Vec<Passwd>> {
-        let entries = Connection::open_with_flags(PATH, OpenFlags::SQLITE_OPEN_READ_ONLY)
+        let entries = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
             .and_then(get_all_entries);
 
         from_result(entries)
     }
 
     fn get_entry_by_uid(uid: libc::uid_t) -> Response<Passwd> {
-        let entry = Connection::open_with_flags(PATH, OpenFlags::SQLITE_OPEN_READ_ONLY)
+        let entry = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
             .and_then(|conn| get_entry_by_uid(conn, uid));
 
         from_result(entry)
     }
 
     fn get_entry_by_name(name: String) -> Response<Passwd> {
-        let entry = Connection::open_with_flags(PATH, OpenFlags::SQLITE_OPEN_READ_ONLY)
+        let entry = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
             .and_then(|conn| get_entry_by_name(conn, &name));
 
         from_result(entry)

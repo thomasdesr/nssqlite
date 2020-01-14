@@ -6,28 +6,36 @@ use rusqlite::{params, Connection, Result, Row, NO_PARAMS};
 
 use crate::db::from_result;
 
-pub const PATH: &str = "/etc/group.db";
+// TODO: Find a better way to do this >.<
+pub const DEFAULT_PATH: &str = "/etc/group.db";
+lazy_static! {
+    pub static ref PATH: String = if cfg!(feature = "dynamic_paths") {
+        std::env::var("NSS_GROUP_PATH").unwrap_or_else(|_| String::from(DEFAULT_PATH))
+    } else {
+        String::from(DEFAULT_PATH)
+    };
+}
 
 pub struct SqliteGroup;
 libnss_group_hooks!(sqlite, SqliteGroup);
 
 impl GroupHooks for SqliteGroup {
     fn get_all_entries() -> Response<Vec<Group>> {
-        let entries = Connection::open_with_flags(PATH, OpenFlags::SQLITE_OPEN_READ_ONLY)
+        let entries = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
             .and_then(get_all_entries);
 
         from_result(entries)
     }
 
     fn get_entry_by_gid(gid: libc::uid_t) -> Response<Group> {
-        let entry = Connection::open_with_flags(PATH, OpenFlags::SQLITE_OPEN_READ_ONLY)
+        let entry = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
             .and_then(|conn| get_entry_by_gid(conn, gid));
 
         from_result(entry)
     }
 
     fn get_entry_by_name(name: String) -> Response<Group> {
-        let entry = Connection::open_with_flags(PATH, OpenFlags::SQLITE_OPEN_READ_ONLY)
+        let entry = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
             .and_then(|conn| get_entry_by_name(conn, &name));
 
         from_result(entry)

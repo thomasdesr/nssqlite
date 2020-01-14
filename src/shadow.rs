@@ -6,21 +6,29 @@ use rusqlite::{params, Connection, Result, Row, NO_PARAMS};
 
 use crate::db::from_result;
 
-pub const PATH: &str = "/etc/shadow.db";
+// TODO: Find a better way to do this >.<
+pub const DEFAULT_PATH: &str = "/etc/shadow.db";
+lazy_static! {
+    pub static ref PATH: String = if cfg!(feature = "dynamic_paths") {
+        std::env::var("NSS_SHADOW_PATH").unwrap_or_else(|_| String::from(DEFAULT_PATH))
+    } else {
+        String::from(DEFAULT_PATH)
+    };
+}
 
 pub struct SqliteShadow;
 libnss_shadow_hooks!(sqlite, SqliteShadow);
 
 impl ShadowHooks for SqliteShadow {
     fn get_all_entries() -> Response<Vec<Shadow>> {
-        let entries = Connection::open_with_flags(PATH, OpenFlags::SQLITE_OPEN_READ_ONLY)
+        let entries = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
             .and_then(get_all_entries);
 
         from_result(entries)
     }
 
     fn get_entry_by_name(name: String) -> Response<Shadow> {
-        let entry = Connection::open_with_flags(PATH, OpenFlags::SQLITE_OPEN_READ_ONLY)
+        let entry = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
             .and_then(|conn| get_entry_by_name(conn, &name));
 
         from_result(entry)
