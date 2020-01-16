@@ -5,6 +5,6 @@ extern crate libnss;
 
 mod db;
 
-mod group;
-mod passwd;
-mod shadow;
+pub mod group;
+pub mod passwd;
+pub mod shadow;

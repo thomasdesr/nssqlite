@@ -6,7 +6,7 @@ edition = "2018"
 
 [lib]
 name = "nss_sqlite"
-crate-type = [ "cdylib" ]
+crate-type = [ "cdylib", "lib" ]
 
 [dependencies]
 libc = "0.2.66"
