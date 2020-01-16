@@ -38,7 +38,7 @@ impl ShadowHooks for SqliteShadow {
 fn get_all_entries(conn: Connection) -> Result<Vec<Shadow>> {
     conn.prepare(
         "
-        SELECT username, encrypted_password, date_of_last_password_change, minimum_password_age, maximum_password_age, password_warning_period, account_expiration_date
+        SELECT username, encrypted_password, date_of_last_password_change, minimum_password_age, maximum_password_age, password_warning_period, password_inactivity_period, account_expiration_date, reserved_field
         FROM shadow
         ",
     )?
@@ -48,7 +48,7 @@ fn get_all_entries(conn: Connection) -> Result<Vec<Shadow>> {
 fn get_entry_by_name(conn: Connection, name: &str) -> Result<Shadow> {
     conn.query_row_and_then(
         "
-        SELECT username, encrypted_password, date_of_last_password_change, minimum_password_age, maximum_password_age, password_warning_period, account_expiration_date
+        SELECT username, encrypted_password, date_of_last_password_change, minimum_password_age, maximum_password_age, password_warning_period, password_inactivity_period, account_expiration_date, reserved_field
         FROM shadow
         WHERE username = ?1
         ",
@@ -58,18 +58,17 @@ fn get_entry_by_name(conn: Connection, name: &str) -> Result<Shadow> {
 }
 
 fn from_row(row: &Row) -> Result<Shadow> {
+    // Default values for each of these are based on `glibc/shadow/sgetspent_r.c`
+
     Ok(Shadow {
         name: row.get(0)?,
         passwd: row.get(1)?,
-        last_change: row.get(2)?,
-        change_min_days: row.get(3)?,
-        change_max_days: row.get(4)?,
-        change_warn_days: row.get(5)?,
-        change_inactive_days: row.get(6)?,
-        expire_date: row.get(7)?,
-        // TODO: figure out how to handle reserved.
-        // Ideas:
-        //  * blob <-> u64:
-        reserved: 0,
+        last_change: row.get::<usize, Option<i64>>(2)?.unwrap_or(-1),
+        change_min_days: row.get::<usize, Option<i64>>(3)?.unwrap_or(-1),
+        change_max_days: row.get::<usize, Option<i64>>(4)?.unwrap_or(-1),
+        change_warn_days: row.get::<usize, Option<i64>>(5)?.unwrap_or(-1),
+        change_inactive_days: row.get::<usize, Option<i64>>(6)?.unwrap_or(-1),
+        expire_date: row.get::<usize, Option<i64>>(7)?.unwrap_or(-1),
+        reserved: row.get::<usize, Option<u32>>(8)?.unwrap_or(!0u32) as u64,
     })
 }
