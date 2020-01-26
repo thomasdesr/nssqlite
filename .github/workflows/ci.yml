@@ -1,7 +1,8 @@
 on:
-  # On push/pr & weekly
+  # On a branch push & weekly
   push:
-  pull_request:
+    branches:
+      - '*'
   schedule:
     - cron: "0 23 * * 0"
 
