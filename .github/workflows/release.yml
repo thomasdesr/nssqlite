@@ -1,0 +1,50 @@
+on:
+  release:
+    types: [created, edited]
+
+name: Build Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      - name: build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - run: mv target/release/libnss_sqlite.so{,.2}
+
+      - name: upload release artifact
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: target/release/libnss_sqlite.so.2
+          asset_name: libnss_sqlite.so.2
+          asset_content_type: application/octet-stream
+
+      - uses: thomaso-mirodin/minisign-action@v1
+        with:
+          args: -Sm target/release/libnss_sqlite.so.2
+          minisign_key: ${{ secrets.MINISIGN_RELEASE_KEY }}
+
+      - name: upload detached signature
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: target/release/libnss_sqlite.so.2.minisig
+          asset_name: libnss_sqlite.so.2.minisig
+          asset_content_type: application/octet-stream
