@@ -1,4 +1,9 @@
-on: push
+on:
+  # On push/pr & weekly
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 23 * * 0"
 
 name: CI
 
