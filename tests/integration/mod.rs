@@ -6,7 +6,10 @@ mod interface {
 
 #[cfg(target_os = "linux")]
 mod libc {
-    mod groups;
+    // Support tooling
     mod nss;
+
+    // Tests
+    mod groups;
     mod passwd;
 }

@@ -36,12 +36,19 @@ fn get_all_shadows() {
 fn get_existing_user() {
     setup();
 
-    let entries = SqliteShadow::get_entry_by_name("test-user".to_string());
-    if let Response::Success(shadow) = entries {
-        assert_eq!("test-user", shadow.name);
-    } else if let Response::NotFound = entries {
-        panic!("should've returned a row")
-    } else {
-        panic!("unexpected response type")
+    match SqliteShadow::get_entry_by_name("test-user".to_string()) {
+        Response::Success(shadow) => assert_eq!("test-user", shadow.name),
+        Response::NotFound => panic!("should've returned a row"),
+        _ => panic!("unexpected response type"),
+    }
+}
+
+#[test]
+fn get_missing_user() {
+    setup();
+
+    match SqliteShadow::get_entry_by_name("misisng-user".to_string()) {
+        Response::NotFound => {}
+        _ => panic!("Tried to fetch a user that shouldnt exist and got something back"),
     }
 }

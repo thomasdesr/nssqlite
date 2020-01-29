@@ -1,12 +1,10 @@
+use anyhow::Result;
 use libnss::interop::Response;
 
-use rusqlite::Error::QueryReturnedNoRows;
-use rusqlite::Result;
-
 pub fn from_result<T>(res: Result<T>) -> Response<T> {
-    match res {
-        Ok(r) => Response::Success(r),
-        Err(QueryReturnedNoRows) => Response::NotFound,
-        _ => Response::Unavail,
-    }
+    res.map(Response::Success)
+        .unwrap_or_else(|err| match err.downcast::<rusqlite::Error>() {
+            Ok(rusqlite::Error::QueryReturnedNoRows) => Response::NotFound,
+            _ => Response::Unavail,
+        })
 }

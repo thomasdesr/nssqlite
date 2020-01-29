@@ -14,6 +14,7 @@ lazy_static = "1.4.0"
 paste = "0.1.6"
 libnss = { git = "https://github.com/csnewman/libnss-rs", rev = "be24e70b207c4355712de6706e4025fb113fa09c" }
 rusqlite = { version = "0.21.0", features = ["bundled"] }
+anyhow = "1"
 
 [dev-dependencies]
 users = "0.9"

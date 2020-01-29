@@ -1,8 +1,8 @@
+use anyhow::Result;
 use libnss::group::{Group, GroupHooks};
 use libnss::interop::Response;
-
 use rusqlite::OpenFlags;
-use rusqlite::{params, Connection, Result, Row, NO_PARAMS};
+use rusqlite::{params, Connection, Row, NO_PARAMS};
 
 use crate::db::from_result;
 
@@ -22,6 +22,7 @@ libnss_group_hooks!(sqlite, SqliteGroup);
 impl GroupHooks for SqliteGroup {
     fn get_all_entries() -> Response<Vec<Group>> {
         let entries = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .map_err(Into::into)
             .and_then(get_all_entries);
 
         from_result(entries)
@@ -29,6 +30,7 @@ impl GroupHooks for SqliteGroup {
 
     fn get_entry_by_gid(gid: libc::uid_t) -> Response<Group> {
         let entry = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .map_err(Into::into)
             .and_then(|conn| get_entry_by_gid(conn, gid));
 
         from_result(entry)
@@ -36,6 +38,7 @@ impl GroupHooks for SqliteGroup {
 
     fn get_entry_by_name(name: String) -> Response<Group> {
         let entry = Connection::open_with_flags(&PATH as &str, OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .map_err(Into::into)
             .and_then(|conn| get_entry_by_name(conn, &name));
 
         from_result(entry)
